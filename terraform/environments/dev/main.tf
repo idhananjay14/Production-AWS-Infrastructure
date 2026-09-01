@@ -34,3 +34,48 @@ module "alb" {
   public_subnet_ids = module.vpc.public_subnet_ids
   security_group_id = module.security_groups.alb_security_group_id
 }
+
+module "app" {
+  source = "../../modules/app"
+
+  ami_id            = "ami-090d68841c2a28756"
+  instance_type     = "t3.micro"
+  subnet_ids        = module.vpc.private_app_subnet_ids
+  security_group_id = module.security_groups.app_security_group_id
+  target_group_arn  = module.alb.target_group_arn
+  instance_count    = 2
+
+  user_data = <<-USERDATA
+    #!/bin/bash
+    dnf install -y python3
+
+    mkdir -p /var/www/app
+
+    cat > /var/www/app/index.html <<'HTML'
+    <html>
+      <body>
+        <h1>Production AWS Infrastructure</h1>
+        <p>Application server is healthy.</p>
+      </body>
+    </html>
+    HTML
+
+    cat > /etc/systemd/system/app.service <<'SERVICE'
+    [Unit]
+    Description=Production App Health Service
+    After=network.target
+
+    [Service]
+    Type=simple
+    WorkingDirectory=/var/www/app
+    ExecStart=/usr/bin/python3 -m http.server 8080 --bind 0.0.0.0 --directory /var/www/app
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+    SERVICE
+
+    systemctl daemon-reload
+    systemctl enable --now app.service
+  USERDATA
+}
