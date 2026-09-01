@@ -26,3 +26,11 @@ module "security_groups" {
 
   vpc_id = module.vpc.vpc_id
 }
+
+module "alb" {
+  source = "../../modules/alb"
+
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+  security_group_id = module.security_groups.alb_security_group_id
+}
