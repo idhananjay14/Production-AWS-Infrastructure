@@ -92,7 +92,7 @@ module "database" {
   engine_version    = "17"
   instance_class    = "db.t3.micro"
   database_name     = "productiondb"
-  master_username   = "admin"
+  master_username   = "appuser"
   master_password   = var.db_master_password
   subnet_ids        = module.vpc.private_db_subnet_ids
   security_group_id = module.security_groups.db_security_group_id
