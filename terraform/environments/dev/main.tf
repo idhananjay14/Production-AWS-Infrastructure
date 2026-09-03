@@ -117,3 +117,28 @@ module "database" {
   subnet_ids        = module.vpc.private_db_subnet_ids
   security_group_id = module.security_groups.db_security_group_id
 }
+
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  environment                 = "dev"
+  autoscaling_group_name      = module.app.autoscaling_group_name
+  alb_load_balancer_dimension = module.alb.alb_load_balancer_dimension
+  alb_target_group_dimension  = module.alb.target_group_dimension
+  db_instance_identifier      = module.database.db_instance_id
+}
+
+output "alb_dns_name" {
+  description = "DNS name of the application ALB"
+  value       = module.alb.alb_dns_name
+}
+
+output "autoscaling_group_name" {
+  description = "Application Auto Scaling Group name"
+  value       = module.app.autoscaling_group_name
+}
+
+output "rds_endpoint" {
+  description = "RDS PostgreSQL endpoint"
+  value       = module.database.db_endpoint
+}
