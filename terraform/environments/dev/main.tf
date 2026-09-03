@@ -51,17 +51,23 @@ module "alb" {
 
 module "iam" {
   source = "../../modules/iam"
+
+  environment = "dev"
 }
 
 module "app" {
   source = "../../modules/app"
+
+  environment = "dev"
 
   ami_id                = "ami-090d68841c2a28756"
   instance_type         = "t3.micro"
   subnet_ids            = module.vpc.private_app_subnet_ids
   security_group_id     = module.security_groups.app_security_group_id
   target_group_arn      = module.alb.target_group_arn
-  instance_count        = 2
+  min_size              = 1
+  desired_capacity      = 1
+  max_size              = 2
   instance_profile_name = module.iam.instance_profile_name
 
   user_data = <<-USERDATA
