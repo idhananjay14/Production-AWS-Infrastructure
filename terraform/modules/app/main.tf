@@ -6,6 +6,12 @@ resource "aws_instance" "app" {
 
   subnet_id              = var.subnet_ids[count.index]
   vpc_security_group_ids = [var.security_group_id]
+  iam_instance_profile   = var.instance_profile_name
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
 
   user_data = var.user_data
 

@@ -35,15 +35,20 @@ module "alb" {
   security_group_id = module.security_groups.alb_security_group_id
 }
 
+module "iam" {
+  source = "../../modules/iam"
+}
+
 module "app" {
   source = "../../modules/app"
 
-  ami_id            = "ami-090d68841c2a28756"
-  instance_type     = "t3.micro"
-  subnet_ids        = module.vpc.private_app_subnet_ids
-  security_group_id = module.security_groups.app_security_group_id
-  target_group_arn  = module.alb.target_group_arn
-  instance_count    = 2
+  ami_id                = "ami-090d68841c2a28756"
+  instance_type         = "t3.micro"
+  subnet_ids            = module.vpc.private_app_subnet_ids
+  security_group_id     = module.security_groups.app_security_group_id
+  target_group_arn      = module.alb.target_group_arn
+  instance_count        = 2
+  instance_profile_name = module.iam.instance_profile_name
 
   user_data = <<-USERDATA
     #!/bin/bash

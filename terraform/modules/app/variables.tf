@@ -33,3 +33,8 @@ variable "target_group_arn" {
   description = "ARN of the ALB target group"
   type        = string
 }
+
+variable "instance_profile_name" {
+  description = "IAM instance profile name for application servers"
+  type        = string
+}
