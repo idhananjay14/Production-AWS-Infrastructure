@@ -1,9 +1,9 @@
-output "instance_ids" {
-  description = "IDs of the application instances"
-  value       = aws_instance.app[*].id
+output "autoscaling_group_name" {
+  description = "Name of the application Auto Scaling Group"
+  value       = aws_autoscaling_group.app.name
 }
 
-output "private_ips" {
-  description = "Private IP addresses of the application instances"
-  value       = aws_instance.app[*].private_ip
+output "launch_template_id" {
+  description = "ID of the application Launch Template"
+  value       = aws_launch_template.app.id
 }

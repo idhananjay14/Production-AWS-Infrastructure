@@ -18,8 +18,18 @@ variable "security_group_id" {
   type        = string
 }
 
-variable "instance_count" {
-  description = "Number of application instances"
+variable "min_size" {
+  description = "Minimum number of application instances"
+  type        = number
+}
+
+variable "desired_capacity" {
+  description = "Desired number of application instances"
+  type        = number
+}
+
+variable "max_size" {
+  description = "Maximum number of application instances"
   type        = number
 }
 
