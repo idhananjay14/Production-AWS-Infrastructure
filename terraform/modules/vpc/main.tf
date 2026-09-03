@@ -2,7 +2,7 @@ resource "aws_vpc" "this" {
   cidr_block = var.vpc_cidr
 
   tags = {
-    Name = "production-vpc"
+    Name = "${var.environment}-vpc"
   }
 }
 
@@ -46,7 +46,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = {
-    Name = "production-igw"
+    Name = "${var.environment}-igw"
   }
 }
 
@@ -105,7 +105,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name = "production-nat-eip"
+    Name = "${var.environment}-nat-eip"
   }
 }
 
@@ -114,7 +114,7 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "production-nat-gateway"
+    Name = "${var.environment}-nat-gateway"
   }
 
   depends_on = [aws_internet_gateway.this]
