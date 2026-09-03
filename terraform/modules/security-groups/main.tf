@@ -1,5 +1,5 @@
 resource "aws_security_group" "alb" {
-  name        = "production-alb-sg"
+  name        = "${var.environment}-alb-sg"
   description = "Security group for the Application Load Balancer"
   vpc_id      = var.vpc_id
 
@@ -20,12 +20,12 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "production-alb-sg"
+    Name = "${var.environment}-alb-sg"
   }
 }
 
 resource "aws_security_group" "app" {
-  name        = "production-app-sg"
+  name        = "${var.environment}-app-sg"
   description = "Security group for application servers"
   vpc_id      = var.vpc_id
 
@@ -46,12 +46,12 @@ resource "aws_security_group" "app" {
   }
 
   tags = {
-    Name = "production-app-sg"
+    Name = "${var.environment}-app-sg"
   }
 }
 
 resource "aws_security_group" "db" {
-  name        = "production-db-sg"
+  name        = "${var.environment}-db-sg"
   description = "Security group for database servers"
   vpc_id      = var.vpc_id
 
@@ -72,6 +72,6 @@ resource "aws_security_group" "db" {
   }
 
   tags = {
-    Name = "production-db-sg"
+    Name = "${var.environment}-db-sg"
   }
 }

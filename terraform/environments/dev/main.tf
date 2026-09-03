@@ -22,6 +22,8 @@ provider "aws" {
 module "vpc" {
   source = "../../modules/vpc"
 
+  environment = "dev"
+
   vpc_cidr                 = "10.0.0.0/16"
   availability_zones       = ["ap-south-1a", "ap-south-1b"]
   public_subnet_cidrs      = ["10.0.1.0/24", "10.0.2.0/24"]
@@ -32,11 +34,15 @@ module "vpc" {
 module "security_groups" {
   source = "../../modules/security-groups"
 
+  environment = "dev"
+
   vpc_id = module.vpc.vpc_id
 }
 
 module "alb" {
   source = "../../modules/alb"
+
+  environment = "dev"
 
   vpc_id            = module.vpc.vpc_id
   public_subnet_ids = module.vpc.public_subnet_ids
@@ -96,7 +102,7 @@ module "app" {
 module "database" {
   source = "../../modules/database"
 
-  identifier        = "production-postgres"
+  identifier        = "dev-postgres"
   engine_version    = "17"
   instance_class    = "db.t3.micro"
   database_name     = "productiondb"

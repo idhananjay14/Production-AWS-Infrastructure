@@ -22,3 +22,8 @@ variable "private_db_subnet_cidrs" {
   description = "CIDR blocks for private database subnets"
   type        = list(string)
 }
+
+variable "environment" {
+  description = "Environment name used for resource naming"
+  type        = string
+}

@@ -38,3 +38,8 @@ variable "instance_profile_name" {
   description = "IAM instance profile name for application servers"
   type        = string
 }
+
+variable "environment" {
+  description = "Environment name used for resource naming"
+  type        = string
+}

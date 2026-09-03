@@ -1,5 +1,5 @@
 resource "aws_lb" "this" {
-  name               = "production-alb"
+  name               = "${var.environment}-alb"
   internal           = false
   load_balancer_type = "application"
 
@@ -7,12 +7,12 @@ resource "aws_lb" "this" {
   subnets         = var.public_subnet_ids
 
   tags = {
-    Name = "production-alb"
+    Name = "${var.environment}-alb"
   }
 }
 
 resource "aws_lb_target_group" "app" {
-  name     = "production-app-tg"
+  name     = "${var.environment}-app-tg"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = var.vpc_id
@@ -24,7 +24,7 @@ resource "aws_lb_target_group" "app" {
   }
 
   tags = {
-    Name = "production-app-tg"
+    Name = "${var.environment}-app-tg"
   }
 }
 

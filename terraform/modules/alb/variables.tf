@@ -12,3 +12,8 @@ variable "security_group_id" {
   description = "Security group ID for the ALB"
   type        = string
 }
+
+variable "environment" {
+  description = "Environment name used for resource naming"
+  type        = string
+}
