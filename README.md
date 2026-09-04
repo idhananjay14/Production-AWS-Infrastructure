@@ -23,6 +23,10 @@ The architecture contains:
 - IAM instance profile for EC2
 - IMDSv2 required on EC2 instances
 - Reusable Terraform modules
+- Auto Scaling Group for EC2 application servers
+- CloudWatch alarms for EC2, ALB, and RDS monitoring
+- S3 remote Terraform state with state locking
+- GitHub Actions CI with AWS OIDC authentication
 
 
 ## Architecture
@@ -76,50 +80,9 @@ The database tier does not have a default route to the internet.
 | IAM | Provides EC2 IAM role and instance profile |
 | Elastic IP | Provides the public IP associated with the NAT Gateway |
 | Terraform | Provisions infrastructure as code |
-
-
-
-## Project Structure
-
-```text
-Production-AWS-Infrastructure/
-│
-├── .github/
-│
-├── docs/
-│   ├── architecture.png
-│   ├── 01-terraform-plan.png
-│   ├── 02-alb-target-health.png
-│   ├── 03-application.png
-│   ├── 04-rds.png
-│   └── 05-ec2-imdsv2.png
-│
-├── terraform/
-│   ├── environments/
-│   │   ├── dev/
-│   │   │   ├── main.tf
-│   │   │   ├── variables.tf
-│   │   │   └── .terraform.lock.hcl
-│   │   │
-│   │   └── prod/
-│   │       └── .gitkeep
-│   │
-│   └── modules/
-│       ├── alb/
-│       ├── app/
-│       ├── compute/
-│       ├── database/
-│       ├── iam/
-│       ├── monitoring/
-│       ├── rds/
-│       ├── security-groups/
-│       └── vpc/
-│
-├── .gitignore
-└── README.md
-```
-
-
+| Amazon CloudWatch | Provides infrastructure monitoring and alarms |
+| Amazon S3 | Stores remote Terraform state |
+| GitHub Actions | Runs Terraform CI checks automatically |
 
 ## Network Architecture
 
@@ -197,26 +160,6 @@ RDS PostgreSQL
 - EC2 metadata access requires IMDSv2.
 - The EC2 IAM role does not have unnecessary AWS API permissions.
 
-
-
-## Terraform Design
-
-The infrastructure is divided into reusable Terraform modules.
-
-```text
-terraform/
-├── environments/
-│   └── dev/
-│
-└── modules/
-    ├── vpc/
-    ├── security-groups/
-    ├── alb/
-    ├── app/
-    ├── database/
-    └── iam/
-```
-
 ### VPC Module
 
 Creates:
@@ -245,11 +188,11 @@ Creates:
 - Application Load Balancer
 - Target Group
 - Listener
-- EC2 target registration
+- Auto Scaling Group target registration
 
 ### App Module
 
-Creates two EC2 application instances in private application subnets.
+Creates an EC2 Launch Template and Auto Scaling Group for application servers in private application subnets.
 
 The application listens on:
 
@@ -271,7 +214,14 @@ Creates the EC2 IAM role and instance profile.
 
 The application does not require AWS API access, so no additional AWS permissions are attached.
 
+### Monitoring Module
 
+Creates CloudWatch alarms for:
+
+- EC2 Auto Scaling Group CPU utilization
+- ALB unhealthy targets
+- RDS CPU utilization
+- RDS free storage
 
 ## Deployment
 
@@ -290,6 +240,8 @@ aws sts get-caller-identity
 ```
 
 ### Initialize Terraform
+
+Each environment uses an S3 remote backend for Terraform state with state locking.
 
 ```bash
 cd terraform/environments/dev
@@ -339,7 +291,18 @@ terraform destroy
 
 > The infrastructure contains billable AWS resources such as EC2, RDS, ALB, and NAT Gateway. Destroy unused resources to avoid unnecessary charges.
 
----
+### CI with GitHub Actions
+
+Terraform checks are automated using GitHub Actions.
+
+The workflow runs for both `dev` and `prod` environments and performs:
+
+- Terraform formatting checks
+- Terraform initialization
+- Terraform validation
+- Terraform plan
+
+AWS authentication uses GitHub Actions OIDC with a dedicated IAM role instead of storing long-lived AWS access keys.
 
 ## Validation
 
@@ -353,7 +316,7 @@ The final Terraform configuration was verified against the deployed infrastructu
 
 ### ALB Target Health
 
-Both EC2 application instances successfully registered as healthy targets on port `8080`.
+The EC2 application instance managed by the Auto Scaling Group successfully registered as a healthy target on port 8080.
 
 ![ALB Target Health](docs/02-alb-target-health.png)
 
@@ -376,12 +339,18 @@ The PostgreSQL RDS instance was verified with:
 
 ![RDS](docs/04-rds.png)
 
-### EC2 IMDSv2
+### CloudWatch Alarms
 
-Both EC2 application instances were configured with IMDSv2 required.
+The infrastructure includes CloudWatch alarms for:
 
-![EC2 IMDSv2](docs/05-ec2-imdsv2.png)
+- EC2 Auto Scaling Group CPU utilization
+- ALB unhealthy targets
+- RDS CPU utilization
+- RDS free storage
 
+All configured alarms were verified after deployment.
+
+![CloudWatch Alarms](docs/05-cloudwatch-alarms.png)
 
 ## Cost & Production Trade-offs
 
@@ -412,14 +381,15 @@ A production environment requiring stronger availability would typically use a N
 | RDS | Single-AZ | Multi-AZ |
 | Load Balancer | HTTP | HTTPS with ACM |
 | Database Credentials | Terraform variable | AWS Secrets Manager |
-| Terraform State | Local state | Remote S3 backend |
+| Terraform State | S3 remote backend with state locking | Centralized remote state with stronger collaboration and recovery |
 | AMI | Explicit AMI ID | Dynamic AMI / SSM lookup |
 | RDS Deletion | Destroy-friendly | Deletion protection + final snapshot |
 | Egress | Broad outbound access | More restrictive egress controls |
-| Monitoring | Basic | CloudWatch alarms and dashboards |
+| Monitoring | CloudWatch alarms | Dashboards, centralized observability, and alerting |
+| CI/CD | GitHub Actions Terraform CI | Automated apply with approvals and deployment controls |
 
 These trade-offs were intentional and balance **architecture quality, learning value, and cost**.
 
 ## Key Takeaways
 
-VPC networking, public/private subnet design, NAT/IGW routing, ALB, private EC2 + RDS, security groups, IAM, IMDSv2, and Terraform IaC.
+VPC networking, public/private subnet design, NAT/IGW routing, ALB, EC2 Auto Scaling, private RDS PostgreSQL, security groups, IAM, IMDSv2, CloudWatch monitoring, S3 remote Terraform state, and GitHub Actions CI with AWS OIDC.
